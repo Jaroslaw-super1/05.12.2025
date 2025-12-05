@@ -198,5 +198,24 @@ topit::HorizontalSegment::HorizontalSegment(int y, int x1, int x2):
 {}
 
 
+topit::p_t topit::HorizontalSegment::begin() const
+{
+  return start;
+}
+
+topit::p_t topit::HorizontalSegment::next(p_t prev) const
+{
+  if (prev == start)
+  {
+    return end;
+  } else if (prev == end)
+  {
+    return start;
+  } else
+  {
+    throw std::logic_error("bad impl");
+  }
+}
+
 
 

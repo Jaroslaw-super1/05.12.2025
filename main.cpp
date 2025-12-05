@@ -49,6 +49,18 @@ namespace topit
     p_t start, end;
   };
 
+  // Вертикальная линия
+  struct VerticalSegment : IDraw
+  {
+    VerticalSegment(int x, int y1, int y2);
+    explicit VerticalSegment(p_t start, p_t end);
+    
+    p_t begin() const override;
+    p_t next(p_t) const override;
+
+    p_t start, end;
+  };
+
   // Должен расширять заданный массив точками из очередной фигуры
   size_t points(const IDraw & d, p_t ** pts, size_t & s);
 
@@ -148,7 +160,7 @@ bool topit::operator!=(p_t a, p_t b)
   return !(a == b);
 }
 
-// ::Dot - имя класса второй ::Dot имя конструктора
+// Точка ::Dot - имя класса второй ::Dot имя конструктора
 topit::Dot::Dot(p_t dd):
   IDraw(),
   d{dd}
@@ -157,12 +169,10 @@ topit::Dot::Dot(int x, int y):
   IDraw(),
   d{x, y}
 {}
-
 topit::p_t topit::Dot::begin() const
 {
   return d;
 }
-
 topit::p_t topit::Dot::next(p_t prev) const
 {
   if (prev != begin())
@@ -172,37 +182,21 @@ topit::p_t topit::Dot::next(p_t prev) const
   return d;
 }
 
-  // Горизонтальная линия
-  struct HorizontalSegment : IDraw
-  {
-    HorizontalSegment(int y, int x1, int x2);
-    explicit HorizontalSegment(p_t start, p_t end);
-    
-    p_t begin() const override;
-    p_t next(p_t) const override;
-
-    p_t start, end;
-  };
-
 // Линия
 topit::HorizontalSegment::HorizontalSegment(p_t a, p_t b):
   IDraw(),
   start{a}
   end{b}
 {}
-
 topit::HorizontalSegment::HorizontalSegment(int y, int x1, int x2):
   IDraw(),
   start{x1, y}
   end{x2, y}
 {}
-
-
 topit::p_t topit::HorizontalSegment::begin() const
 {
   return start;
 }
-
 topit::p_t topit::HorizontalSegment::next(p_t prev) const
 {
   if (prev == start)
@@ -217,5 +211,31 @@ topit::p_t topit::HorizontalSegment::next(p_t prev) const
   }
 }
 
-
-
+// Вертикальная линия
+topit::VerticalSegment::VerticalSegment(p_t a, p_t b):
+  IDraw(),
+  start{a}
+  end{b}
+{}
+topit::VerticalSegment::VerticalSegment(int x, int y1, int y2):
+  IDraw(),
+  start{x, y1}
+  end{x, y2}
+{}
+topit::p_t topit::VerticalSegment::begin() const
+{
+  return start;
+}
+topit::p_t topit::VerticalSegment::next(p_t prev) const
+{
+  if (prev == start)
+  {
+    return end;
+  } else if (prev == end)
+  {
+    return start;
+  } else
+  {
+    throw std::logic_error("bad impl");
+  }
+}

@@ -18,9 +18,10 @@ namespace topit
   struct IDraw
   {
     // = 0 - Значит метод чисто виртуальный и ма не предоставим реализацию
+    virtual ~IDraw() = default;
+
     virtual p_t begin() const = 0;
     virtual p_t next(p_t) const = 0;
-    virtual ~IDraw();
   };
 }
 

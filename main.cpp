@@ -16,14 +16,14 @@ namespace topit
 
   struct IDraw
   {
-    // = 0 - Значит метод чисто виртуальный и ма не предоставим реализацию
+    // = 0 - Значит метод чисто виртуальный и мы не предоставим реализацию
     virtual ~IDraw() = default;
 
     virtual p_t begin() const = 0;
     virtual p_t next(p_t) const = 0;
   };
 
-  struct Dot: IDraw
+  struct Dot : IDraw
   {
     Dot(int x, int y);
     // explicit - не должен использовать в неявных преобразованиях
@@ -36,6 +36,18 @@ namespace topit
 
   // ДЗ добавить 2-3 фигуры вертикальный отрезок и горизонтальный отрезок
   // диагональ под 45 заданной длинны
+
+  // Горизонтальная линия
+  struct HorizontalSegment : IDraw
+  {
+    HorizontalSegment(int y, int x1, int x2);
+    explicit HorizontalSegment(p_t start, p_t end);
+    
+    p_t begin() const override;
+    p_t next(p_t) const override;
+
+    p_t start, end;
+  };
 
   // Должен расширять заданный массив точками из очередной фигуры
   size_t points(const IDraw & d, p_t ** pts, size_t & s);
@@ -127,6 +139,15 @@ int main()
   return err;
 }
 
+bool topit::operator==(p_t a, p_t b)
+{
+  return a.x == b.x && a.y == b.y;
+}
+bool topit::operator!=(p_t a, p_t b)
+{
+  return !(a == b);
+}
+
 // ::Dot - имя класса второй ::Dot имя конструктора
 topit::Dot::Dot(p_t dd):
   IDraw(),
@@ -151,13 +172,31 @@ topit::p_t topit::Dot::next(p_t prev) const
   return d;
 }
 
-bool topit::operator==(p_t a, p_t b)
-{
-  return a.x == b.x && a.y == b.y;
-}
-bool topit::operator!=(p_t a, p_t b)
-{
-  return !(a == b);
-}
+  // Горизонтальная линия
+  struct HorizontalSegment : IDraw
+  {
+    HorizontalSegment(int y, int x1, int x2);
+    explicit HorizontalSegment(p_t start, p_t end);
+    
+    p_t begin() const override;
+    p_t next(p_t) const override;
+
+    p_t start, end;
+  };
+
+// Линия
+topit::HorizontalSegment::HorizontalSegment(p_t a, p_t b):
+  IDraw(),
+  start{a}
+  end{b}
+{}
+
+topit::HorizontalSegment::HorizontalSegment(int y, int x1, int x2):
+  IDraw(),
+  start{x1, y}
+  end{x2, y}
+{}
+
+
 
 

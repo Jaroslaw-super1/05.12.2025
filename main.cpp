@@ -14,6 +14,10 @@ namespace topit
     p_t aa, bb;
   };
 
+  size_t rows(f_t);
+  size_t cols(f_t);
+
+
   struct IDraw
   {
     // = 0 - Значит метод чисто виртуальный и мы не предоставим реализацию
@@ -61,6 +65,8 @@ namespace topit
     p_t start, end;
   };
 
+  void extend(p_t ** pts, size_t s, p_t p);
+
   // Должен расширять заданный массив точками из очередной фигуры
   size_t points(const IDraw & d, p_t ** pts, size_t & s);
 
@@ -68,10 +74,10 @@ namespace topit
   f_t frame(const p_t * pts, size_t s);
 
   // Построить полотно (из фрейма получить количество столбцов и колонок)
-  char * canvas(f_t fr, const char * fill);
+  char * canvas(f_t fr, const char fill);
 
   // Координаты точки перевести в координаты в массиве
-  void paint(char * cnv, f_t fr, p_t p, const char * fill);
+  void paint(char * cnv, f_t fr, p_t p, const char fill);
 
   // Вывод двумерного массива на основе размеров определяемых фреймом
   void flush(std::ostream & os, const char * cnv, f_t fr);
@@ -89,7 +95,7 @@ int main()
   using topit::IDraw;
   */
 
-  size_t lenght_shps = 3;
+  size_t lenght_shps = 5;
   // ошибка в shps
   IDraw * shps[lenght_shps] = {};
   for (size_t i = 0; i < lenght_shps; i++)
@@ -102,8 +108,10 @@ int main()
   try
   {
     shps[0] = new Dot(0, 0);
-    shps[1] = new Dot(5, 2);
-    shps[2] = new Dot(1, 6);
+    shps[1] = new Dot(40, 15);
+    shps[2] = new Dot(11, 0);
+    shps[3] = new HorizontalSegment(5, 3, 10);
+    shps[4] = new VerticalSegment(11, 6, 13);
 
     for (size_t i = 0; i < lenght_shps; i++)
     {
@@ -112,17 +120,14 @@ int main()
 
     f_t fr = frame(pts, s);
 
-    char * cnv = canvas(fr, ".");
+    char * cnv = canvas(fr, '.');
     for (size_t i = 0; i < s; i++)
     {
-      paint(cnv, fr, pts[i], "#");
+      paint(cnv, fr, pts[i], '#');
     }
 
     flush(std::cout, cnv, fr);
-    
-
-
-
+    delete[] cnv;
   } catch (...)
   {
     err = 2;
@@ -133,7 +138,7 @@ int main()
 
   for (size_t i = 0; i < lenght_shps; i++)
   {
-    delete[] shps[i];
+    delete shps[i];
   }
   
   
@@ -149,6 +154,95 @@ int main()
   std::cout << (a != b) << '\n';
 */
   return err;
+}
+
+
+// Координаты точки перевести в координаты в массиве
+void topit::paint(char * cnv, f_t fr, p_t p, const char fill)
+{
+  size_t dy = fr.bb.y - p.y;
+  size_t dx = p.x - fr.aa.x;
+  cnv[dy * cols(fr) + dx] = fill;
+}
+
+// Вывод двумерного массива на основе размеров определяемых фреймом
+void topit::flush(std::ostream & os, const char * cnv, f_t fr)
+{
+  for (size_t i = 0; i < rows(fr); i++)
+  {
+    for (size_t j = 0; j < cols(fr); j++)
+    {
+      os << cnv[i * cols(fr) + j];
+    }
+    os << '\n';
+  }
+}
+
+size_t topit::rows(f_t fr)
+{
+  return fr.bb.y - fr.aa.y + 1;
+}
+size_t topit::cols(f_t fr)
+{
+  return fr.bb.x - fr.aa.x + 1;
+}
+
+// Построить полотно (из фрейма получить количество столбцов и колонок)
+char * topit::canvas(f_t fr, const char fill)
+{
+  char * cnv = new char[rows(fr) * cols(fr)];
+  for (size_t i = 0; i < rows(fr) * cols(fr); i++)
+  {
+    cnv[i] = fill;
+  }
+  return cnv;
+}
+
+topit::f_t topit::frame(const p_t * pts, size_t s)
+{
+  if (!s)
+  {
+    throw std::logic_error("Nu tochi nada");
+  }
+  int minx = pts[0].x, maxx = minx;
+  int miny = pts[0].y, maxy = miny;
+  for (size_t i = 0; i < s; i++)
+  {
+    minx = std::min(minx, pts[i].x);
+    maxx = std::max(maxx, pts[i].x);
+    miny = std::min(miny, pts[i].y);
+    maxy = std::max(maxy, pts[i].y);
+  }
+  p_t aa = {minx, miny};
+  p_t bb = {maxx, maxy};
+  return {aa, bb};
+  
+}
+
+void topit::extend(p_t ** pts, size_t s, p_t p)
+{
+  p_t * e = new p_t[s + 1];
+  for (size_t i = 0; i < s; i++)
+  {
+    e[i] = (*pts)[i];
+  }
+  e[s] = p;
+  delete [] *pts;
+  *pts = e;
+}
+
+size_t topit::points(const IDraw & d, p_t ** pts, size_t & s)
+{
+  size_t r = 1;
+  p_t p = d.begin();
+  extend(pts, s, p);
+  while (d.next(p) != d.begin())
+  {
+    p = d.next(p);
+    extend(pts, s + r, p);
+    ++r;
+  }
+  return r;
 }
 
 bool topit::operator==(p_t a, p_t b)
@@ -185,12 +279,12 @@ topit::p_t topit::Dot::next(p_t prev) const
 // Линия
 topit::HorizontalSegment::HorizontalSegment(p_t a, p_t b):
   IDraw(),
-  start{a}
+  start{a},
   end{b}
 {}
 topit::HorizontalSegment::HorizontalSegment(int y, int x1, int x2):
   IDraw(),
-  start{x1, y}
+  start{x1, y},
   end{x2, y}
 {}
 topit::p_t topit::HorizontalSegment::begin() const
@@ -199,27 +293,27 @@ topit::p_t topit::HorizontalSegment::begin() const
 }
 topit::p_t topit::HorizontalSegment::next(p_t prev) const
 {
-  if (prev == start)
+  if (prev == end)
   {
-    return end;
-  } else if (prev == end)
-  {
-    return start;
-  } else
+    return begin();
+  }
+  return p_t{prev.x + 1, prev.y};
+  
+  /*else
   {
     throw std::logic_error("bad impl");
-  }
+  }*/
 }
 
 // Вертикальная линия
 topit::VerticalSegment::VerticalSegment(p_t a, p_t b):
   IDraw(),
-  start{a}
+  start{a},
   end{b}
 {}
 topit::VerticalSegment::VerticalSegment(int x, int y1, int y2):
   IDraw(),
-  start{x, y1}
+  start{x, y1},
   end{x, y2}
 {}
 topit::p_t topit::VerticalSegment::begin() const
@@ -228,14 +322,9 @@ topit::p_t topit::VerticalSegment::begin() const
 }
 topit::p_t topit::VerticalSegment::next(p_t prev) const
 {
-  if (prev == start)
+  if (prev == end)
   {
-    return end;
-  } else if (prev == end)
-  {
-    return start;
-  } else
-  {
-    throw std::logic_error("bad impl");
+    return begin();
   }
+  return p_t{prev.x, prev.y + 1};
 }

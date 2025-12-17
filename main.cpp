@@ -108,7 +108,8 @@ int main()
   try
   {
     shps[0] = new Dot(0, 0);
-    shps[1] = new Dot(40, 15);
+    shps[1] = new Dot(40, 20);
+
     shps[2] = new Dot(11, 0);
     shps[3] = new HorizontalSegment(5, 3, 10);
     shps[4] = new VerticalSegment(11, 6, 13);
